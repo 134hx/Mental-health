@@ -6,16 +6,16 @@ const routes = [
         component: () => import("@/components/login/Login.vue")
     },
     {
+        path: '/resetPwd',
+        component: () => import("@/components/login/ResetPwd.vue")
+    },
+    {
         path: '/psych',
         redirect: '/psych/Index',
         children: [
             {
                 path: 'index',
                 component: () => import("@/components/psych/Index.vue")
-            },
-            {
-                path: '/resetPwd',
-                component: () => import("@/components/login/ResetPwd.vue")
             },
             {
                 path: 'psyindex',
@@ -40,6 +40,26 @@ const routes = [
             {
                 path: 'userinfo',
                 component: () => import("@/components/user/UserInfo.vue")
+            },
+            {
+                path: 'appointment',
+                component: () => import('@/components/appointment/Appointment.vue')
+            },
+            {
+                path: 'community',
+                component: () => import('@/components/community/Community.vue')
+            },
+            {
+                path: 'video',
+                component: () => import('@/components/video/Video.vue')
+            },
+            {
+                path: 'video/detail/:id',
+                component: () => import('@/components/video/VideoDetail.vue')
+            },
+            {
+                path: 'science',
+                component: () => import('@/components/science/Science.vue')
             }
         ]
     },

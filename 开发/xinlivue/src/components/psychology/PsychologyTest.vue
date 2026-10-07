@@ -1,41 +1,40 @@
 <template>
   <PsychHeader title="量表答题" />
-  <div class="page-wrap">
-    <el-card class="page-card" shadow="hover">
-      <template #header>
-        <div class="card-header-row">
-          <div class="card-header-title">请认真完成题目</div>
-          <div v-if="questionList.length" class="tip-index">第 {{ currentIndex+1 }} 题 / {{ questionList.length }} 题</div>
-          <el-button type="danger" size="small" @click="giveUpTest">放弃测评</el-button>
-        </div>
-      </template>
-      <!-- 没有题目显示加载，有题目才渲染题目区域 -->
-      <div v-if="questionList.length">
-        <div class="q-item">
-          <p class="q-text">{{ currentIndex + 1 }}、{{ currentQuestion.questionContent }}</p>
-          <!-- 使用 radio‑button，纵向布局，矩形选框，无圆点 -->
-          <el-radio-group v-model="answerMap[currentQuestion.id]" class="radio-group">
-            <el-radio-button
-                v-for="(opt,optIdx) in parseOption(currentQuestion.optionJson)"
-                :key="opt.score"
-                :label="opt.score">
-              {{ getAbcLabel(optIdx) }}、{{ opt.label }}
-            </el-radio-button>
-          </el-radio-group>
-        </div>
+  <div class="page-bg">
+    <div class="page-wrap">
+      <el-card class="page-card" shadow="hover">
+        <template #header>
+          <div class="card-header-row">
+            <div class="card-header-title">请认真完成题目</div>
+            <div v-if="questionList.length" class="tip-index">第 {{ currentIndex+1 }} 题 / {{ questionList.length }} 题</div>
+            <el-button type="danger" size="small" @click="giveUpTest">放弃测评</el-button>
+          </div>
+        </template>
+        <div v-if="questionList.length">
+          <div class="q-item">
+            <p class="q-text">{{ currentIndex + 1 }}、{{ currentQuestion.questionContent }}</p>
+            <el-radio-group v-model="answerMap[currentQuestion.id]" class="radio-group">
+              <el-radio-button
+                  v-for="(opt,optIdx) in parseOption(currentQuestion.optionJson)"
+                  :key="opt.score"
+                  :label="opt.score">
+                {{ getAbcLabel(optIdx) }}、{{ opt.label }}
+              </el-radio-button>
+            </el-radio-group>
+          </div>
 
-        <div class="btn-area">
-          <el-button :disabled="currentIndex === 0" @click="prevQuestion">上一题</el-button>
-          <!-- 不是最后一题：显示下一题；最后一题：显示提交 -->
-          <el-button v-if="currentIndex < questionList.length -1" type="primary" @click="nextQuestion">下一题</el-button>
-          <el-button v-else type="success" @click="submitTest">提交测评</el-button>
+          <div class="btn-area">
+            <el-button :disabled="currentIndex === 0" @click="prevQuestion">上一题</el-button>
+            <el-button v-if="currentIndex < questionList.length -1" type="primary" @click="nextQuestion">下一题</el-button>
+            <el-button v-else type="success" @click="submitTest">提交测评</el-button>
+          </div>
         </div>
-      </div>
-      <div v-else class="loading-wrap">
-        <el-skeleton rows="4" animated />
-        <div class="loading-text">正在加载测评题目...</div>
-      </div>
-    </el-card>
+        <div v-else class="loading-wrap">
+          <el-skeleton rows="4" animated />
+          <div class="loading-text">正在加载测评题目...</div>
+        </div>
+      </el-card>
+    </div>
   </div>
 </template>
 
@@ -54,12 +53,10 @@ const questionList = ref([])
 const answerMap = reactive({})
 const currentIndex = ref(0)
 
-// 当前题目计算属性
 const currentQuestion = computed(()=>{
   return questionList.value[currentIndex.value]
 })
 
-// ABCD标签生成
 const getAbcLabel = (idx)=>{
   const arr = ['A','B','C','D','E','F']
   return arr[idx]
@@ -74,21 +71,18 @@ const getQuestion = async () => {
   questionList.value = res.data.data
 }
 
-// 上一题：不再校验是否作答，直接切换
 const prevQuestion = ()=>{
   if(currentIndex.value > 0){
     currentIndex.value --
   }
 }
 
-// 下一题：不再校验是否作答，可以直接翻页浏览
 const nextQuestion = ()=>{
   if(currentIndex.value < questionList.value.length - 1){
     currentIndex.value ++
   }
 }
 
-// 放弃测评：弹窗确认，跳转到测评列表页 /psych/psyindex
 const giveUpTest = async ()=>{
   await ElMessageBox.confirm(
       '确定要放弃本次测评吗？作答内容不会保存。',
@@ -98,15 +92,16 @@ const giveUpTest = async ()=>{
   router.push('/psych/psyindex')
 }
 
-// 提交全部答卷：提交时校验【所有题目必须全部完成】
-// 提交全部答卷：提交时校验【所有题目必须全部完成】
 const submitTest = async () => {
-  // 提交前校验全部题目，而不是单题
   let unAnsweredCount = 0
   let userRawTotal = 0
   let maxTotal = 0
   for(let q of questionList.value){
-    maxTotal += 3 // 每题满分固定为3
+    // 每题最高分从选项里取，兼容不同量表（3 分或 4 分）
+    const opts = parseOption(q.optionJson)
+    const maxScore = Math.max(...opts.map(o => Number(o.score)))
+    maxTotal += maxScore
+
     if(answerMap[q.id] === undefined){
       unAnsweredCount ++
     }else{
@@ -117,8 +112,9 @@ const submitTest = async () => {
     return ElMessage.warning(`还有 ${unAnsweredCount} 道题目未完成，请完成全部题目后再提交！`)
   }
 
-  // 百分制计算，四舍五入取整
-  const percentScore = Math.round( 100 - ( userRawTotal / maxTotal * 100 ) );
+  // ★ 国际标准：原始分越高代表症状越严重
+  // percentScore 只用于展示"严重程度"0-100，越大越严重
+  const percentScore = Math.round( userRawTotal / maxTotal * 100 );
 
   await ElMessageBox.confirm(
       '确认提交答卷？提交后不可修改。',
@@ -133,7 +129,6 @@ const submitTest = async () => {
       percentScore: percentScore
     }
   })
-  // 拿到生成的测评记录id，跳转到独立报告页面
   const recordId = res.data.data.id
   ElMessage.success("测评提交成功")
   router.push({ path:'/psych/report', query:{ recordId } })
@@ -178,24 +173,20 @@ onMounted(() => {
   color:#303133;
   line-height:1.6;
 }
-
 .radio-group {
   display: flex;
   flex-direction: column;
   gap: 14px;
 }
-
 .radio-group :deep(.el-radio-button) {
   width: 100%;
 }
-
 .radio-group :deep(.el-radio-button__inner) {
   width: 100%;
   justify-content: flex-start;
   text-align: left;
   padding-left: 18px;
 }
-
 .btn-area{
   display:flex;
   justify-content:center;
