@@ -130,15 +130,21 @@ const submitReset=async ()=>{
 }
 </script>
 <style scoped>
-.reset-bg{
-  height:100vh;
+.reset-bg {
+  height: 100vh;
   background-image: url("/bg/XL.jpg");
   background-size: cover;
   background-position: center center;
   background-repeat: no-repeat;
   background-attachment: fixed;
-  background-color: rgba(0,0,0,0.12);
-  background-blend-mode: multiply;
+  position: relative;
+}
+.reset-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.08);
+  pointer-events: none;
 }
 .reset-wrap{
   height:100%;

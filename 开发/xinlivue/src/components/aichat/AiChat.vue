@@ -129,18 +129,16 @@ const getShortTitle = (str)=>{
 // 发送消息
 const sendMsg = async () => {
   if (!inputText.value.trim()) return ElMessage.warning("请输入内容")
-  if(loadingAi.value) return // 加载中禁止重复发送
+  if(loadingAi.value) return
   loadingAi.value = true
   const userContent = inputText.value.trim()
-  // 判断：当前会话标题是否为【新对话】，是就代表第一条消息，自动重命名
   const currentSessionItem = sessionList.value.find(s=> s.id === currentSessionId.value)
   if(currentSessionItem && currentSessionItem.sessionTitle === "新对话"){
     const newTitle = getShortTitle(userContent)
-    // 调用后端更新标题接口
     await $axios.post("/aiSession/updateTitle",null,{
       params:{sessionId: currentSessionId.value, sessionTitle: newTitle}
     })
-    await loadSessionList() // 刷新侧边栏会话列表，展示新标题
+    await loadSessionList()
   }
   msgList.value.push({role:"user", content:userContent})
   inputText.value = ''
@@ -150,6 +148,7 @@ const sendMsg = async () => {
     const res = await $axios.post("/aiMessage/send", null, {
       params: { sessionId: currentSessionId.value, content: userContent }
     })
+    // 接口永远code=200，直接取出AI消息
     msgList.value.push(res.data.data)
   }catch (e){
     ElMessage.error("消息发送失败")
@@ -159,6 +158,7 @@ const sendMsg = async () => {
     chatDom.value.scrollTop = chatDom.value.scrollHeight
   }
 }
+
 onMounted(async () => {
   await loadSessionList()
   if(sessionList.value.length === 0){
@@ -169,15 +169,32 @@ onMounted(async () => {
 })
 </script>
 <style scoped>
-.page-bg{
+.page-bg {
   min-height: calc(100vh - 64px);
   background-image: url("/bg/XL.jpg");
   background-size: cover;
   background-position: center center;
   background-repeat: no-repeat;
   background-attachment: fixed;
-  background-color: rgba(0,0,0,0.12);
-  background-blend-mode: multiply;
+  background-color: #f5f7fa;
+  padding: 24px 0;
+  position: relative;
+}
+/* ★ 只压一点亮度，不模糊 */
+.page-bg::before {
+  content: '';
+  position: fixed;
+  top: 64px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.08);
+  pointer-events: none;
+  z-index: 0;
+}
+.page-bg > * {
+  position: relative;
+  z-index: 1;
 }
 .page-wrap {
   padding:24px;

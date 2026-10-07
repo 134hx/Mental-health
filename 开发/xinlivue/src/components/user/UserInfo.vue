@@ -12,13 +12,13 @@
         <el-form ref="userFormRef" :model="form" label-width="110px">
           <el-form-item label="头像">
             <el-upload
-                action="http://localhost:8080/common/upload"
+                action="/api/common/upload"
                 :headers="uploadHeaders"
                 :show-file-list="false"
                 :on-success="handleAvatarSuccess"
                 :before-upload="beforeUpload"
             >
-              <img v-if="form.avatar" :src="`http://localhost:8080/${form.avatar}`" class="avatar-img" />
+              <img v-if="form.avatar" :src="imgUrl(form.avatar)" class="avatar-img" />
               <div v-else class="avatar-placeholder">
                 <el-icon size="40"><User /></el-icon>
               </div>
@@ -51,7 +51,6 @@
           </el-form-item>
           <el-form-item>
             <el-button type="primary" @click="submitUpdate">保存修改</el-button>
-            <el-button type="success" @click="goRecord">查看测评记录</el-button>
             <el-button type="warning" @click="$router.push({path:'/resetPwd', query:{from:'userinfo'}})">修改密码</el-button>
           </el-form-item>
         </el-form>
@@ -63,6 +62,7 @@
 import { ref, reactive, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import $axios from '@/utils/axios'
+import { imgUrl } from '@/utils/imgUrl'
 import { ElMessage } from 'element-plus'
 import { User } from '@element-plus/icons-vue'
 import PsychHeader from '@/components/header/PsychHeader.vue'
@@ -101,24 +101,40 @@ const submitUpdate = async () => {
   let localUser = localUserStr ? JSON.parse(localUserStr) : {}
   Object.assign(localUser, form)
   localStorage.setItem("user", JSON.stringify(localUser))
+  window.dispatchEvent(new Event('user-updated'))
 }
-const goRecord = () => {
-  router.push("/psych/record")
-}
+
 onMounted(() => {
   getUserInfo()
 })
 </script>
 <style scoped>
-.page-bg{
+.page-bg {
   min-height: calc(100vh - 64px);
   background-image: url("/bg/XL.jpg");
   background-size: cover;
   background-position: center center;
   background-repeat: no-repeat;
   background-attachment: fixed;
-  background-color: rgba(0,0,0,0.12);
-  background-blend-mode: multiply;
+  background-color: #f5f7fa;
+  padding: 24px 0;
+  position: relative;
+}
+/* ★ 只压一点亮度，不模糊 */
+.page-bg::before {
+  content: '';
+  position: fixed;
+  top: 64px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.08);
+  pointer-events: none;
+  z-index: 0;
+}
+.page-bg > * {
+  position: relative;
+  z-index: 1;
 }
 .page-wrap {
   padding:24px;
@@ -154,4 +170,3 @@ onMounted(() => {
   color:#909399;
 }
 </style>
-

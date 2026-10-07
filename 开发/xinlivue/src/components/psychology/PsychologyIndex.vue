@@ -6,7 +6,11 @@
         <template #header>
           <div class="card-header-row">
             <div class="card-header-title">📋 心理自评量表列表</div>
-            <el-button size="small" @click="$router.push('/psych/index')">返回首页</el-button>
+            <div class="header-btn-group">
+              <!-- 调换顺序：查看测评记录 在左边，返回首页 在右边 -->
+              <el-button size="small" @click="$router.push('/psych/record')">查看测评记录</el-button>
+              <el-button size="small" @click="$router.push('/psych/index')">返回首页</el-button>
+            </div>
           </div>
         </template>
         <div class="scale-wrap">
@@ -41,15 +45,32 @@ onMounted(() => {
 })
 </script>
 <style scoped>
-.page-bg{
+.page-bg {
   min-height: calc(100vh - 64px);
   background-image: url("/bg/XL.jpg");
   background-size: cover;
   background-position: center center;
   background-repeat: no-repeat;
   background-attachment: fixed;
-  background-color: rgba(0,0,0,0.12);
-  background-blend-mode: multiply;
+  background-color: #f5f7fa;
+  padding: 24px 0;
+  position: relative;
+}
+/* ★ 只压一点亮度，不模糊 */
+.page-bg::before {
+  content: '';
+  position: fixed;
+  top: 64px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.08);
+  pointer-events: none;
+  z-index: 0;
+}
+.page-bg > * {
+  position: relative;
+  z-index: 1;
 }
 .page-wrap {
   padding: 24px;
@@ -64,6 +85,10 @@ onMounted(() => {
   justify-content:space-between;
   align-items:center;
 }
+.header-btn-group{
+  display:flex;
+  gap:10px;
+}
 .card-header-title {
   font-size:18px;
   font-weight:600;
@@ -71,7 +96,7 @@ onMounted(() => {
 }
 .scale-wrap {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap:wrap;
   gap: 24px;
 }
 .scale-card {
@@ -88,11 +113,10 @@ onMounted(() => {
 }
 .desc {
   color:#666;
-  font-size:14px;
-  min-height:48px;
+  line-height:1.6;
 }
-.card-footer {
-  margin-top:16px;
+.card-footer{
+  margin-top:20px;
   text-align:right;
 }
 </style>
