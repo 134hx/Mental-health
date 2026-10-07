@@ -11,6 +11,7 @@ public class Scale {
     private Long id;
     private String scaleName;
     private String description;
+    private String conclusionJson;
     private LocalDateTime createTime;
 
     public Long getId() { return id; }
@@ -19,6 +20,8 @@ public class Scale {
     public void setScaleName(String scaleName) { this.scaleName = scaleName; }
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
+    public String getConclusionJson() { return conclusionJson; }
+    public void setConclusionJson(String conclusionJson) { this.conclusionJson = conclusionJson; }
     public LocalDateTime getCreateTime() { return createTime; }
     public void setCreateTime(LocalDateTime createTime) { this.createTime = createTime; }
 }
